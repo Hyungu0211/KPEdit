@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>KPEditClass</class>
+ <widget class="QMainWindow" name="KPEditClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>KPEdit</string>
+  </property>
+  <property name="Text Edit" stdset="0">
+   <string/>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>600</width>
+      <height>380</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="File">
+    <property name="title">
+     <string>파일</string>
+    </property>
+    <addaction name="action"/>
+    <addaction name="action_2"/>
+    <addaction name="action_3"/>
+    <addaction name="action_4"/>
+    <addaction name="action_5"/>
+    <addaction name="action_6"/>
+   </widget>
+   <widget class="QMenu" name="Edit">
+    <property name="title">
+     <string>편집</string>
+    </property>
+    <addaction name="Undo"/>
+    <addaction name="Redo"/>
+    <addaction name="action_7"/>
+    <addaction name="action_8"/>
+    <addaction name="action_9"/>
+    <addaction name="action_10"/>
+   </widget>
+   <widget class="QMenu" name="Setting">
+    <property name="title">
+     <string>설정</string>
+    </property>
+    <addaction name="action_11"/>
+   </widget>
+   <addaction name="File"/>
+   <addaction name="Edit"/>
+   <addaction name="Setting"/>
+  </widget>
+  <action name="action">
+   <property name="text">
+    <string>새 파일</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>열기</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>닫기</string>
+   </property>
+  </action>
+  <action name="action_4">
+   <property name="text">
+    <string>저장</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>다른 이름으로 저장</string>
+   </property>
+  </action>
+  <action name="action_6">
+   <property name="text">
+    <string>종료</string>
+   </property>
+  </action>
+  <action name="Undo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="Redo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+  </action>
+  <action name="action_7">
+   <property name="text">
+    <string>복사</string>
+   </property>
+  </action>
+  <action name="action_8">
+   <property name="text">
+    <string>잘라내기</string>
+   </property>
+  </action>
+  <action name="action_9">
+   <property name="text">
+    <string>붙여넣기</string>
+   </property>
+  </action>
+  <action name="action_10">
+   <property name="text">
+    <string>찾기/바꾸기</string>
+   </property>
+  </action>
+  <action name="action_11">
+   <property name="text">
+    <string>자동 저장 설정</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="KPEdit.qrc"/>
+ </resources>
+ <connections/>
+</ui>

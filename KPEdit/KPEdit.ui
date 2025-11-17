@@ -41,12 +41,12 @@
     <property name="title">
      <string>파일</string>
     </property>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
-    <addaction name="action_3"/>
-    <addaction name="action_4"/>
-    <addaction name="action_5"/>
-    <addaction name="action_6"/>
+    <addaction name="NewFile"/>
+    <addaction name="Open"/>
+    <addaction name="Close"/>
+    <addaction name="Save"/>
+    <addaction name="Save_as"/>
+    <addaction name="Exit"/>
    </widget>
    <widget class="QMenu" name="Edit">
     <property name="title">
@@ -54,47 +54,47 @@
     </property>
     <addaction name="Undo"/>
     <addaction name="Redo"/>
-    <addaction name="action_7"/>
-    <addaction name="action_8"/>
-    <addaction name="action_9"/>
-    <addaction name="action_10"/>
+    <addaction name="Copy"/>
+    <addaction name="Cut"/>
+    <addaction name="Paste"/>
+    <addaction name="Find_Replace"/>
    </widget>
    <widget class="QMenu" name="Setting">
     <property name="title">
      <string>설정</string>
     </property>
-    <addaction name="action_11"/>
+    <addaction name="AutoSave"/>
    </widget>
    <addaction name="File"/>
    <addaction name="Edit"/>
    <addaction name="Setting"/>
   </widget>
-  <action name="action">
+  <action name="NewFile">
    <property name="text">
     <string>새 파일</string>
    </property>
   </action>
-  <action name="action_2">
+  <action name="Open">
    <property name="text">
     <string>열기</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="Close">
    <property name="text">
     <string>닫기</string>
    </property>
   </action>
-  <action name="action_4">
+  <action name="Save">
    <property name="text">
     <string>저장</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="Save_as">
    <property name="text">
     <string>다른 이름으로 저장</string>
    </property>
   </action>
-  <action name="action_6">
+  <action name="Exit">
    <property name="text">
     <string>종료</string>
    </property>
@@ -109,27 +109,27 @@
     <string>Redo</string>
    </property>
   </action>
-  <action name="action_7">
+  <action name="Copy">
    <property name="text">
     <string>복사</string>
    </property>
   </action>
-  <action name="action_8">
+  <action name="Cut">
    <property name="text">
     <string>잘라내기</string>
    </property>
   </action>
-  <action name="action_9">
+  <action name="Paste">
    <property name="text">
     <string>붙여넣기</string>
    </property>
   </action>
-  <action name="action_10">
+  <action name="Find_Replace">
    <property name="text">
     <string>찾기/바꾸기</string>
    </property>
   </action>
-  <action name="action_11">
+  <action name="AutoSave">
    <property name="text">
     <string>자동 저장 설정</string>
    </property>

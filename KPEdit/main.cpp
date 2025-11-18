@@ -1,10 +1,10 @@
-#include "KPEdit.h"
+#include "MainWindow.h"
 #include <QtWidgets/QApplication>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    KPEdit window;
+    MainWindow window;
     window.show();
     return app.exec();
 }

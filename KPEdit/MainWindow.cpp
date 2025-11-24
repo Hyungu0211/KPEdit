@@ -2,38 +2,47 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QFileDialog>
-
-// 설정 창 구현을 위한 헤더들 추가
+#include <QCloseEvent>
+#include <QPushButton>
+#include <QFileInfo>
+// 설정창용
 #include <QDialog>
 #include <QVBoxLayout>
+#include <QGroupBox>
 #include <QRadioButton>
 #include <QDialogButtonBox>
-#include <QLabel>
-#include <QGroupBox>
+#include <QMessageBox> // 테스트 메시지용
+
+using namespace std;
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    // 1. 창 기본 설정
-    setWindowTitle("KPEdit - C++ Source Editor");
+    setWindowTitle("KPEdit");
     resize(800, 600);
 
-    // 2. 중앙 위젯 배치
-    m_textWidget = new TextWidgetUI(this);
-    setCentralWidget(m_textWidget);
+    textWidget = new TextWidgetUI(this);
+    setCentralWidget(textWidget);
 
-    // 3. 메뉴 생성
+    controller = new Controller(textWidget);
+    textWidget->setController(controller);
+
+    // 텍스트 변경 시 -> Dirty 설정 및 제목 갱신
+    connect(textWidget, &QPlainTextEdit::textChanged, [=]() {
+        controller->setdirty();
+        updateWindowTitle();
+        });
+
     createActions();
     createMenus();
+    updateWindowTitle();
 }
 
-MainWindow::~MainWindow()
-{
-}
+MainWindow::~MainWindow() {}
 
 void MainWindow::createActions()
 {
-    // [파일]
+    // 파일
     newAction = new QAction("새 파일(&N)", this);
     newAction->setShortcut(QKeySequence::New);
     connect(newAction, &QAction::triggered, this, &MainWindow::onFileNew);
@@ -54,20 +63,19 @@ void MainWindow::createActions()
     exitAction->setShortcut(QKeySequence::Quit);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
-    // [편집]
+    // 편집 (Qt 기본 슬롯 연결)
     undoAction = new QAction("실행 취소(&U)", this);
     undoAction->setShortcut(QKeySequence::Undo);
-    connect(undoAction, &QAction::triggered, this, &MainWindow::onUndo);
+    connect(undoAction, &QAction::triggered, textWidget, &QPlainTextEdit::undo);
 
     redoAction = new QAction("다시 실행(&R)", this);
     redoAction->setShortcut(QKeySequence::Redo);
-    connect(redoAction, &QAction::triggered, this, &MainWindow::onRedo);
+    connect(redoAction, &QAction::triggered, textWidget, &QPlainTextEdit::redo);
 
     findAction = new QAction("찾기/바꾸기(&F)...", this);
     findAction->setShortcut(QKeySequence::Find);
     connect(findAction, &QAction::triggered, this, &MainWindow::onFind);
 
-    // [설정]
     settingsAction = new QAction("환경 설정(&P)...", this);
     connect(settingsAction, &QAction::triggered, this, &MainWindow::onSettings);
 }
@@ -88,72 +96,154 @@ void MainWindow::createMenus()
     editMenu->addSeparator();
     editMenu->addAction(findAction);
 
-    // 설정 메뉴 추가
     QMenu* settingsMenu = menuBar()->addMenu("설정(&S)");
     settingsMenu->addAction(settingsAction);
 }
 
-// ---------------- 기능 구현부 ----------------
+// title 갱신 헬퍼 함수
+void MainWindow::updateWindowTitle()
+{
+    string path = controller->getFilePath();
+    bool isDirty = controller->getIsDirty();
+
+    QString title;
+    if (path.empty()) title = "제목 없음";
+    else title = QFileInfo(QString::fromStdString(path)).fileName();
+
+    title += " - KPEdit";
+    if (isDirty) title += " *";
+
+    setWindowTitle(title);
+}
+
+// 저장 확인 헬퍼 함수 [사용 위치 : 새 파일, 열기, 닫기]
+bool MainWindow::checkSave()
+{
+    if (!controller->getIsDirty()) return true;
+
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("KPEdit");
+    msgBox.setText("변경 사항이 저장되지 않았습니다.\n저장하시겠습니까?");
+    msgBox.setIcon(QMessageBox::Question);
+
+    QPushButton* saveBtn = msgBox.addButton("저장", QMessageBox::AcceptRole);
+    QPushButton* discardBtn = msgBox.addButton("저장 안 함", QMessageBox::DestructiveRole);
+    msgBox.addButton("취소", QMessageBox::RejectRole);
+
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == saveBtn) {
+        onFileSave();
+        return true;
+    }
+    else if (msgBox.clickedButton() == discardBtn) {
+        return true;
+    }
+    return false;
+}
+
+// "새 파일" 구현
+void MainWindow::onFileNew() {
+    if (checkSave()) {
+        controller->onFileNew();
+        updateWindowTitle();
+    }
+}
+
+// "열기" 구현
+void MainWindow::onFileOpen() {
+    if (checkSave()) {
+        QString fileName = QFileDialog::getOpenFileName(this);
+        if (!fileName.isEmpty()) {
+            controller->onFileOpen(fileName.toStdString());
+            updateWindowTitle();
+        }
+    }
+}
+
+// "저장" 구현
+void MainWindow::onFileSave() {
+    if (controller->getIsNewFile()) 
+        onFileSaveAs();
+    else {
+        controller->onFileSave();
+        updateWindowTitle();
+    }
+}
+
+// "다른 이름으로 저장" 구현
+void MainWindow::onFileSaveAs() {
+    QString fileName = QFileDialog::getSaveFileName(this);
+    if (!fileName.isEmpty()) {
+        controller->onFileSaveAs(fileName.toStdString());
+        updateWindowTitle();
+    }
+}
 
 void MainWindow::onSettings()
 {
     // 1. 다이얼로그 창 생성
     QDialog dialog(this);
     dialog.setWindowTitle("환경 설정");
-    dialog.resize(300, 150); // 크기 조절
+    dialog.resize(350, 180); // 적당한 크기 설정
 
-    // 2. 레이아웃 생성 (수직 정렬)
-    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    // 2. 전체 레이아웃 생성 (수직 정렬)
+    QVBoxLayout* mainLayout = new QVBoxLayout(&dialog);
 
-    // 3. 그룹박스 (테두리와 제목)
+    // 3. 그룹박스 생성 (시각적으로 묶어주기 위함)
     QGroupBox* groupBox = new QGroupBox("자동 저장 옵션", &dialog);
     QVBoxLayout* radioLayout = new QVBoxLayout(groupBox);
 
     // 4. 라디오 버튼 2개 생성
-    QRadioButton* timeRadio = new QRadioButton("일정 시간마다 저장 (Time-based)");
-    QRadioButton* inputRadio = new QRadioButton("일정 입력 수마다 저장 (Input-based)");
+    QRadioButton* timeRadio = new QRadioButton("일정 시간마다 저장 (1분)");
+    QRadioButton* inputRadio = new QRadioButton("일정 입력 횟수마다 저장 (100자)");
 
-    // 기본값 설정 (예: 시간 기반을 기본으로)
+    // 기본값 설정 (예: 시간 기반을 기본으로 체크)
+    // (나중에는 현재 설정값을 읽어와서 체크해주는 로직이 필요합니다)
     timeRadio->setChecked(true);
 
+    // 레이아웃에 라디오 버튼 추가
     radioLayout->addWidget(timeRadio);
     radioLayout->addWidget(inputRadio);
-    layout->addWidget(groupBox);
+    radioLayout->addStretch(1); // 여백 추가 (디자인)
 
-    // 5. 확인/취소 버튼 생성
+    // 메인 레이아웃에 그룹박스 추가
+    mainLayout->addWidget(groupBox);
+
+    // 5. 확인/취소 버튼 상자 생성
     QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
-    layout->addWidget(buttonBox);
+    mainLayout->addWidget(buttonBox);
 
-    // 버튼 연결 (OK -> 승인, Cancel -> 거절)
+    // 버튼 동작 연결 (Ok -> accept(), Cancel -> reject())
     connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
-    // 6. 다이얼로그 실행 (Modal 모드)
+    // 6. 다이얼로그 실행 (Modal 모드 - 창이 닫힐 때까지 대기)
     if (dialog.exec() == QDialog::Accepted) {
-        // 사용자가 '확인'을 눌렀을 때 처리 로직
+        // 사용자가 [확인]을 눌렀을 때 실행되는 코드
+
         if (timeRadio->isChecked()) {
-            // TODO: AutoSaveManager에게 "시간 기반 모드"로 설정하라고 명령
-            // QMessageBox::information(this, "설정", "시간 기반 저장이 선택되었습니다.");
+            // TODO: Controller에게 "시간 기반 모드"로 설정 변경 요청
+            // controller->setAutoSaveMode(AutoSaveMode::TimeBased);
+            QMessageBox::information(this, "설정 변경", "자동 저장 모드가 [시간 기반]으로 변경되었습니다.");
         }
-        else {
-            // TODO: AutoSaveManager에게 "입력 수 기반 모드"로 설정하라고 명령
-            // QMessageBox::information(this, "설정", "입력 수 기반 저장이 선택되었습니다.");
+        else if (inputRadio->isChecked()) {
+            // TODO: Controller에게 "입력 수 기반 모드"로 설정 변경 요청
+            // controller->setAutoSaveMode(AutoSaveMode::InputBased);
+            QMessageBox::information(this, "설정 변경", "자동 저장 모드가 [입력 수 기반]으로 변경되었습니다.");
         }
     }
 }
 
-void MainWindow::onFileNew() { /* Controller 연결 예정 */ }
-void MainWindow::onFileOpen() {
-    QString fileName = QFileDialog::getOpenFileName(this);
-    if (!fileName.isEmpty()) { /* Controller 연결 예정 */ }
+// 창 닫기 이벤트 처리
+void MainWindow::closeEvent(QCloseEvent* event) {
+    if (checkSave())
+		// 닫기 허용
+        event->accept();
+    else
+		// 닫기 취소
+        event->ignore();
 }
-void MainWindow::onFileSave() { /* Controller 연결 예정 */ }
-void MainWindow::onFileSaveAs() { /* Controller 연결 예정 */ }
-void MainWindow::onUndo() { /* Controller 연결 예정 */ }
-void MainWindow::onRedo() { /* Controller 연결 예정 */ }
-void MainWindow::onFind() { /* Controller 연결 예정 */ }
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
-    event->accept();
-}
+// 아직 구현 전인 기능 (빈 함수)
+void MainWindow::onFind() {/* Controller 연결 예정 */}

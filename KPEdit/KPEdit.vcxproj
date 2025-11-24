@@ -92,6 +92,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="Document.cpp" />
+    <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="TextWidgetUI.cpp" />
     <QtRcc Include="KPEdit.qrc" />
@@ -101,6 +104,11 @@
   <ItemGroup>
     <QtMoc Include="MainWindow.h" />
     <QtMoc Include="TextWidgetUI.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Controller.h" />
+    <ClInclude Include="Document.h" />
+    <ClInclude Include="FileManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

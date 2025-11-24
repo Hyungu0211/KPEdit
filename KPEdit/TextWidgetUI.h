@@ -1,6 +1,7 @@
 #pragma once
 #include <QPlainTextEdit>
-#include <QKeyEvent>
+
+class Controller;
 
 class TextWidgetUI : public QPlainTextEdit
 {
@@ -8,11 +9,12 @@ class TextWidgetUI : public QPlainTextEdit
 
 public:
     explicit TextWidgetUI(QWidget* parent = nullptr);
+    void setController(Controller* c);
 
 protected:
-    // 키 입력 이벤트를 가로채서 처리하는 함수
     void keyPressEvent(QKeyEvent* event) override;
 
 private:
-    // 추후 추가: SyntaxChecker* m_syntaxChecker;
+	// void matchParentheses(); // ★ 핵심 알고리즘 (괄호 짝 맞추기)
+    Controller* controller;
 };

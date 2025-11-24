@@ -2,6 +2,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QAction>
 #include "TextWidgetUI.h"
+#include "Controller.h"
 
 class MainWindow : public QMainWindow
 {
@@ -15,36 +16,31 @@ protected:
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
-    // --- 파일 메뉴 ---
     void onFileNew();
     void onFileOpen();
     void onFileSave();
     void onFileSaveAs();
-
-    // --- 편집 메뉴 ---
-    void onUndo();
-    void onRedo();
     void onFind();
+    void onSettings();
 
-    // --- 설정 메뉴 ---
-    void onSettings(); // 다이얼로그를 띄울 함수
+	// title 갱신 헬퍼
+    void updateWindowTitle();
 
 private:
     void createActions();
     void createMenus();
+    bool checkSave(); // 저장 확인 헬퍼
 
-    TextWidgetUI* m_textWidget;
+    TextWidgetUI* textWidget;
+    Controller* controller;
 
-    // 액션 목록
     QAction* newAction;
     QAction* openAction;
     QAction* saveAction;
     QAction* saveAsAction;
     QAction* exitAction;
-
     QAction* undoAction;
     QAction* redoAction;
     QAction* findAction;
-
     QAction* settingsAction;
 };

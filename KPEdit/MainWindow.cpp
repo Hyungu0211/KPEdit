@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QRadioButton>
+#include <QTimer>
 #include <QDialogButtonBox>
 #include <QMessageBox> // 테스트 메시지용
 
@@ -26,6 +27,18 @@ MainWindow::MainWindow(QWidget* parent)
 
     controller = new Controller(textWidget);
     textWidget->setController(controller);
+
+    autoSaveManager = new AutoSaveManager(this);
+
+    //자동저장 모드 연동
+    controller->setAutoSaveManager(autoSaveManager);
+    connect(autoSaveManager, &AutoSaveManager::requestSave, this, &MainWindow::onRequestAutoSave);
+
+    //문자열 저장, 변경 문자열 수 관리
+    connect(textWidget, &QPlainTextEdit::textChanged, this, &MainWindow::onTextChanged);
+    //불러온 파일인지 확인
+    fileLoaded = false;
+    
 
     // 텍스트 변경 시 -> Dirty 설정 및 제목 갱신
     connect(textWidget, &QPlainTextEdit::textChanged, [=]() {
@@ -112,6 +125,13 @@ void MainWindow::updateWindowTitle()
 
     title += " - KPEdit";
     if (isDirty) title += " *";
+    AutoSaveMode mode = controller->getAutoSaveMode();
+    if (mode == AutoSaveMode::TimeBased) {
+        title += "- 시간 기반 자동 저장 중";
+    }
+    else if (mode == AutoSaveMode::InputBased) {
+        title += "- 문자열 기반 자동 저장 중";
+    }
 
     setWindowTitle(title);
 }
@@ -146,6 +166,7 @@ bool MainWindow::checkSave()
 void MainWindow::onFileNew() {
     if (checkSave()) {
         controller->onFileNew();
+        fileLoaded = false;
         updateWindowTitle();
     }
 }
@@ -156,6 +177,7 @@ void MainWindow::onFileOpen() {
         QString fileName = QFileDialog::getOpenFileName(this);
         if (!fileName.isEmpty()) {
             controller->onFileOpen(fileName.toStdString());
+            fileLoaded = true;
             updateWindowTitle();
         }
     }
@@ -167,6 +189,7 @@ void MainWindow::onFileSave() {
         onFileSaveAs();
     else {
         controller->onFileSave();
+        fileLoaded = true;
         updateWindowTitle();
     }
 }
@@ -176,6 +199,7 @@ void MainWindow::onFileSaveAs() {
     QString fileName = QFileDialog::getSaveFileName(this);
     if (!fileName.isEmpty()) {
         controller->onFileSaveAs(fileName.toStdString());
+        fileLoaded = true;
         updateWindowTitle();
     }
 }
@@ -222,18 +246,36 @@ void MainWindow::onSettings()
     if (dialog.exec() == QDialog::Accepted) {
         // 사용자가 [확인]을 눌렀을 때 실행되는 코드
 
-        if (timeRadio->isChecked()) {
+        if (timeRadio->isChecked() && fileLoaded == true) {
             // TODO: Controller에게 "시간 기반 모드"로 설정 변경 요청
-            // controller->setAutoSaveMode(AutoSaveMode::TimeBased);
+            controller->setAutoSaveMode(AutoSaveMode::TimeBased);
             QMessageBox::information(this, "설정 변경", "자동 저장 모드가 [시간 기반]으로 변경되었습니다.");
         }
-        else if (inputRadio->isChecked()) {
+        else if (inputRadio->isChecked() && fileLoaded == true) {
             // TODO: Controller에게 "입력 수 기반 모드"로 설정 변경 요청
-            // controller->setAutoSaveMode(AutoSaveMode::InputBased);
+            controller->setAutoSaveMode(AutoSaveMode::InputBased);
             QMessageBox::information(this, "설정 변경", "자동 저장 모드가 [입력 수 기반]으로 변경되었습니다.");
+        }
+        else {
+            QMessageBox::information(this, "설정 변경", "먼저 파일을 저장해주세요.");
         }
     }
 }
+
+void MainWindow::onRequestAutoSave()
+{
+        controller->onFileSave();
+        updateWindowTitle();
+}
+
+void MainWindow::onTextChanged() {
+    QString latestText = textWidget->toPlainText();
+    int curLen = latestText.length();
+    int diff = curLen - prevTextLength;
+    prevTextLength = curLen;
+    controller->notifyInputEdited(diff);
+}
+    
 
 // 창 닫기 이벤트 처리
 void MainWindow::closeEvent(QCloseEvent* event) {

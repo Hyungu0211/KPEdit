@@ -17,4 +17,7 @@ protected:
 private:
 	// void matchParentheses(); // ★ 핵심 알고리즘 (괄호 짝 맞추기)
     Controller* controller;
+
+    QTextEdit* editor;
+
 };

@@ -2,6 +2,7 @@
 #include "Document.h"
 #include "FileManager.h"
 #include "TextWidgetUI.h"
+#include "AutoSaveManager.h"
 #include <QString>
 
 using namespace std;
@@ -76,3 +77,26 @@ void Controller::setdirty() { document->setDirty(true); }
 
 // 새 파일인지 확인
 bool Controller::getIsNewFile() const { return document->getFilePath().empty();}
+
+
+//자동 저장 관련 모드 선택 및 연동
+void Controller::setAutoSaveManager(AutoSaveManager* mgr) {
+    autoSaveManager = mgr;
+}
+
+AutoSaveMode Controller::getAutoSaveMode() const {
+    if (autoSaveManager)
+        return autoSaveManager->getMode();
+    else
+        return AutoSaveMode::None;
+}
+
+void Controller::setAutoSaveMode(AutoSaveMode mode) {
+    if (autoSaveManager)
+        autoSaveManager->setMode(mode);
+}
+
+void Controller::notifyInputEdited(int charCountAdd) {
+    if (autoSaveManager)
+        autoSaveManager->onInputTextEdited(charCountAdd);
+}

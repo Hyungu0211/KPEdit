@@ -6,12 +6,15 @@ using namespace std;
 class Document;
 class FileManager;
 class TextWidgetUI;
+class AutoSaveManager;
+enum class AutoSaveMode;
 
-class Controller
+class Controller 
 {
 public:
     Controller(TextWidgetUI* ui);
     ~Controller();
+
 
     // 파일 작업
     void onFileNew();
@@ -24,6 +27,12 @@ public:
     string getFilePath() const;
     bool getIsNewFile() const;
 
+    // 자동저장 연동
+    void setAutoSaveManager(class AutoSaveManager* mgr);
+    void setAutoSaveMode(AutoSaveMode mode);
+    void notifyInputEdited(int charCountAdd);
+    AutoSaveMode getAutoSaveMode() const;
+
     // Dirty 설정
     void setdirty();
 
@@ -31,4 +40,5 @@ private:
     Document* document;
     FileManager* fileManager;
     TextWidgetUI* textWidget;
+    AutoSaveManager* autoSaveManager = nullptr;
 };

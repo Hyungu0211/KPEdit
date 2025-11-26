@@ -11,6 +11,7 @@ public:
     explicit TextWidgetUI(QWidget* parent = nullptr);
     void setController(Controller* c);
 
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
 

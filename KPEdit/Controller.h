@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <QString>
 
 using namespace std;
 
@@ -32,6 +33,11 @@ public:
     void setAutoSaveMode(AutoSaveMode mode);
     void notifyInputEdited(int charCountAdd);
     AutoSaveMode getAutoSaveMode() const;
+
+    // 찾기 연동
+    int findText(const QString& text, const QString& keyword);
+    QString replaceText(const QString& text, const QString& oldWord, const QString& newWord);
+    QString replaceAllText(const QString& text, const QString& oldWord, const QString& newWord);
 
     // Dirty 설정
     void setdirty();

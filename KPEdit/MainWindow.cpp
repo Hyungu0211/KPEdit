@@ -5,6 +5,7 @@
 #include <QCloseEvent>
 #include <QPushButton>
 #include <QFileInfo>
+
 // 설정창용
 #include <QDialog>
 #include <QVBoxLayout>
@@ -36,9 +37,11 @@ MainWindow::MainWindow(QWidget* parent)
 
     //문자열 저장, 변경 문자열 수 관리
     connect(textWidget, &QPlainTextEdit::textChanged, this, &MainWindow::onTextChanged);
+
     //불러온 파일인지 확인
     fileLoaded = false;
     
+    //찾기쪽 함수 연동
 
     // 텍스트 변경 시 -> Dirty 설정 및 제목 갱신
     connect(textWidget, &QPlainTextEdit::textChanged, [=]() {
@@ -287,5 +290,71 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         event->ignore();
 }
 
-// 아직 구현 전인 기능 (빈 함수)
-void MainWindow::onFind() {/* Controller 연결 예정 */}
+// 찾기/바꾸기 
+void MainWindow::onFind() {
+    FindDialog dlg(this);
+
+    // 찾기 신호 연결
+    connect(&dlg, &FindDialog::findRequested, this, &MainWindow::onFindRequested);
+
+    // 바꾸기 신호 연결
+    connect(&dlg, &FindDialog::replaceRequested, this, &MainWindow::onReplaceRequested);
+
+    // 전체 바꾸기 신호 연결
+    connect(&dlg, &FindDialog::replaceAllRequested, this, &MainWindow::onReplaceAllRequested);
+
+    dlg.exec();
+}
+
+// '찾기' 기능 (커서 이동 등)
+void MainWindow::onFindRequested(const QString& findText) {
+    QString text = textWidget->toPlainText();
+
+    // 새 검색어거나, 위치 초과시 리셋
+    if (lastFindText != findText || lastFindPos == -1 || lastFindPos >= text.length()) {
+        lastFindText = findText;
+        lastFindPos = -1;
+    }
+
+    // 다음 위치 찾기
+    int pos = text.indexOf(findText, lastFindPos + 1);
+
+    if (findText.isEmpty()) {
+        // 검색어가 비어있을 때 아무것도 안 함
+        return;
+    }
+
+    if (lastFindPos == -1 && pos == -1) {
+        QMessageBox::information(this, "Find/Replace", "찾는 단어가 없습니다.");
+        lastFindPos = -1;  // 검색 위치 초기화
+    }
+    else if (pos == -1) {
+        QMessageBox::information(this, "Find/Replace", "마지막 단어까지 모두 찾았습니다. \n한번 더 누를 시, 위에서부터 다시 탐색을 시작합니다.");
+        lastFindPos = -1;  //다시 맨 위부터 탐색
+    }
+    else {
+        // 정상적으로 다음 단어 찾음
+        lastFindPos = pos;
+        QTextCursor cursor = textWidget->textCursor();
+        cursor.setPosition(pos);
+        cursor.setPosition(pos + findText.length(), QTextCursor::KeepAnchor);
+        textWidget->setTextCursor(cursor);
+    }
+}
+
+// '바꾸기' 기능 (한 번만 치환할 때)
+void MainWindow::onReplaceRequested(const QString& findText, const QString& replaceText) {
+    QTextCursor cursor = textWidget->textCursor();
+    if (cursor.selectedText() == findText) {
+        cursor.insertText(replaceText);
+        lastFindPos += (replaceText.length() - findText.length());
+    }
+}
+
+// '전체 바꾸기' 기능
+void MainWindow::onReplaceAllRequested(const QString& findText, const QString& replaceText) {
+    QString text = textWidget->toPlainText();
+    QString result = controller->replaceAllText(text, findText, replaceText);
+    textWidget->setPlainText(result);
+    lastFindPos = -1;
+}

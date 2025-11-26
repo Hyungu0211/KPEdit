@@ -100,3 +100,20 @@ void Controller::notifyInputEdited(int charCountAdd) {
     if (autoSaveManager)
         autoSaveManager->onInputTextEdited(charCountAdd);
 }
+
+
+int Controller::findText(const QString& text, const QString& keyword) {
+    return text.indexOf(keyword); // 첫1개만 찾을 때
+}
+
+QString Controller::replaceText(const QString& text, const QString& oldWord, const QString& newWord) {
+    QString result = text;
+    result.replace(oldWord, newWord); // Qt 기본: 전체 치환
+    return result;
+}
+
+QString Controller::replaceAllText(const QString& text, const QString& oldWord, const QString& newWord) {
+    QString result = text;
+    result.replace(oldWord, newWord); // 모두 바꿈
+    return result;
+}
